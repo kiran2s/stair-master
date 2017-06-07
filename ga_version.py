@@ -209,6 +209,8 @@ def simulationTask(count, moveCount, agent1, task):
         print "iteration" + str(count[0]/50)
         print "---------------------"
     
+    if count[0] == 500:
+        quit()
     ''' 
     if (moveCount[0] == 200):
         joints[0].add_torques(torques[agent1[0][moveCount[0]%4]][0], torques[agent1[0][moveCount[0]%4]][1])
