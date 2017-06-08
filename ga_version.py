@@ -207,6 +207,8 @@ iterationCount = [0]
 lastPhysicsUpdateTime = [0]
 timeBetweenPhysicsUpdates = [0.07]
 
+numAgentJoints = 4
+
 count = 0
 moveCount = 0
 # The task for our simulation
@@ -228,8 +230,8 @@ def simulationTask(count, moveCount, agent1, task):
     if frameTime - lastPhysicsUpdateTime[0] > timeBetweenPhysicsUpdates[0]:
         print str(frameTime)
         if signalCount[0] < len(signals[0]):
-            for i in range(len(joints)):
-                joints[i].add_torques(float(signals[2*i + len(joints)*2*iterationCount[0]][signalCount[0]]), float(signals[2*i+1 + len(joints)*2*iterationCount[0]][signalCount[0]]))
+            for i in range(numAgentJoints):
+                joints[i].add_torques(float(signals[2*i + numAgentJoints*2*iterationCount[0]][signalCount[0]]), float(signals[2*i+1 + numAgentJoints*2*iterationCount[0]][signalCount[0]]))
             lastPhysicsUpdateTime[0] = frameTime
             signalCount[0] += 1
         else:
