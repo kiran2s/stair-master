@@ -205,7 +205,7 @@ signalCount = [0]
 iterationCount = [0]
 
 lastPhysicsUpdateTime = [0]
-timeBetweenPhysicsUpdates = [0.1]
+timeBetweenPhysicsUpdates = [0.07]
 
 count = 0
 moveCount = 0
@@ -227,14 +227,14 @@ def simulationTask(count, moveCount, agent1, task):
 
     if frameTime - lastPhysicsUpdateTime[0] > timeBetweenPhysicsUpdates[0]:
         print str(frameTime)
-        if signalCount[0] < len(signals[0])/2:
+        if signalCount[0] < len(signals[0]):
             for i in range(len(joints)):
                 joints[i].add_torques(float(signals[2*i + len(joints)*2*iterationCount[0]][signalCount[0]]), float(signals[2*i+1 + len(joints)*2*iterationCount[0]][signalCount[0]]))
             lastPhysicsUpdateTime[0] = frameTime
             signalCount[0] += 1
         else:
             f_out = open(yvals,'a')
-            f_out.write(str(limbs[0][1].getPosition().getY()) + "\n")
+            f_out.write(str(limbs[4][1].getPosition().getY()) + "\n")
             f_out.close()
             
             limbCount = 0
@@ -253,7 +253,7 @@ def simulationTask(count, moveCount, agent1, task):
     # Update text  
     TrackballLoc.setText(str(base.trackball.node().getPos()))
     TrackballRot.setText(str(base.trackball.node().getHpr()))
-    Pos.setText(str(limbs[0][1].getPosition()))
+    Pos.setText(str(limbs[4][1].getPosition()))
     contactgroup.empty() 
     count[0] = count[0] + 1
     moveCount[0] = moveCount[0] + 1
