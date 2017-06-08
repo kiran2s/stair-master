@@ -249,6 +249,26 @@ def simulationTask(count, moveCount, agent1, task):
             signalCount[0] = 0
             iterationCount[0] += 1
     
+<<<<<<< HEAD
+=======
+    if (count[0] % 50 == 0):    
+        print "---------------------"
+        print "iteration" + str(count[0]/50)
+        print "---------------------"
+    
+    if count[0] == 500:
+        quit()
+    ''' 
+    if (moveCount[0] == 200):
+        joints[0].add_torques(torques[agent1[0][moveCount[0]%4]][0], torques[agent1[0][moveCount[0]%4]][1])
+        joints[1].add_torques(torques[agent1[1][moveCount[0]%4]][0], torques[agent1[1][moveCount[0]%4]][1])
+        joints[2].add_torques(torques[agent1[2][moveCount[0]%4]][0], torques[agent1[2][moveCount[0]%4]][1])
+        joints[3].add_torques(torques[agent1[3][moveCount[0]%4]][0], torques[agent1[3][moveCount[0]%4]][1])
+        moveCount[0] = 0
+    '''
+    for joint in joints:
+        joint.add_torques(random.randint(-2000, 2000), random.randint(-2000, 2000))
+>>>>>>> be42c93006e25b842c954aee3ddbbf7a26383423
     # Update text  
     TrackballLoc.setText(str(base.trackball.node().getPos()))
     TrackballRot.setText(str(base.trackball.node().getHpr()))
