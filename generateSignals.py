@@ -15,7 +15,7 @@ signalLength = fps * simDuration
 
 # how many and how much can it change
 numSignals = 2000
-nextItrRange = 100
+nextItrRange = 1000
 
 cwd = os.getcwd()
 output = cwd + "/initialSignals.txt"

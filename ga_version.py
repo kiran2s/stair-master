@@ -197,7 +197,6 @@ yvals = cwd + "/yvals.txt"
 
 signals = []
 f_in = open(inputSignal, "r")
-f_out = open(yvals,'w')
 for line in f_in:
     line = line.strip()
     signals.append(line.split(","))
@@ -234,10 +233,10 @@ def simulationTask(count, moveCount, agent1, task):
             lastPhysicsUpdateTime[0] = frameTime
             signalCount[0] += 1
         else:
+            f_out = open(yvals,'a')
             f_out.write(str(limbs[0][1].getPosition().getY()) + "\n")
-            if iterationCount[0] >= 250:
-                f_out.close()
-                return task.done
+            f_out.close()
+            
             limbCount = 0
             for np, body in limbs:
                 #body.setPosition(agentInitX, limbCount*1.75-15, agentInitZ)
@@ -248,27 +247,9 @@ def simulationTask(count, moveCount, agent1, task):
                 limbCount = limbCount + 1
             signalCount[0] = 0
             iterationCount[0] += 1
+            if iterationCount[0] >= 250:
+                return task.done
     
-<<<<<<< HEAD
-=======
-    if (count[0] % 50 == 0):    
-        print "---------------------"
-        print "iteration" + str(count[0]/50)
-        print "---------------------"
-    
-    if count[0] == 500:
-        quit()
-    ''' 
-    if (moveCount[0] == 200):
-        joints[0].add_torques(torques[agent1[0][moveCount[0]%4]][0], torques[agent1[0][moveCount[0]%4]][1])
-        joints[1].add_torques(torques[agent1[1][moveCount[0]%4]][0], torques[agent1[1][moveCount[0]%4]][1])
-        joints[2].add_torques(torques[agent1[2][moveCount[0]%4]][0], torques[agent1[2][moveCount[0]%4]][1])
-        joints[3].add_torques(torques[agent1[3][moveCount[0]%4]][0], torques[agent1[3][moveCount[0]%4]][1])
-        moveCount[0] = 0
-    '''
-    for joint in joints:
-        joint.add_torques(random.randint(-2000, 2000), random.randint(-2000, 2000))
->>>>>>> be42c93006e25b842c954aee3ddbbf7a26383423
     # Update text  
     TrackballLoc.setText(str(base.trackball.node().getPos()))
     TrackballRot.setText(str(base.trackball.node().getHpr()))

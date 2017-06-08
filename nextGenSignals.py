@@ -9,7 +9,7 @@ upperBound = 6000
 lowerBound = -6000
 
 numSignals = 1000
-changeRange = 25
+changeRange = 1000
 
 cwd = os.getcwd()
 inputSignal = cwd + "/initialSignals.txt"
