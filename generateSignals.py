@@ -5,17 +5,17 @@ import os
 posOrNeg = [-1, 1]
 
 # upper and lower bounds for torque values
-upperBound = 2000 
-lowerBound = -2000
+upperBound = 6000
+lowerBound = -6000
 
 # fps and simulation duration
-fps = 60
-simDuration = 20 
+fps = 10
+simDuration = 20
 signalLength = fps * simDuration
 
 # how many and how much can it change
-numSignals = 1000
-nextItrRange = 75
+numSignals = 2000
+nextItrRange = 100
 
 cwd = os.getcwd()
 output = cwd + "/initialSignals.txt"

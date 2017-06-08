@@ -7,11 +7,13 @@ from direct.gui.OnscreenText import OnscreenText
 import random
 import math
 
+import os
+
 numStairs = 10 # do not change, value is dependent on models
 numLimbs = 5
 
 agentInitX = 1
-agentInitY= -3
+agentInitY= -11
 agentInitZ = 0.5
 
 class Actions:
@@ -49,8 +51,7 @@ def createLimb(limbs, x, y, z, model, r, g, b, world, rand):
     boxNP = model.copyTo(render)
     boxNP.setPos(x, y, z)
     boxNP.setColor(r, g, b, 1)
-    if rand:
-        boxNP.setHpr(randint(-45, 45), randint(-45, 45), randint(-45, 45))
+    boxNP.setHpr(90, 0, 0)
     # Create the body and set the mass
     boxBody = OdeBody(world)
     M = OdeMass()
@@ -131,12 +132,12 @@ limbs = []
 joints = []
 
 for i in range(0, numLimbs):
-    createLimb(limbs, i*1.75+agentInitX, agentInitY, agentInitZ, rect, (i+1)%2, 0, (i%2), world, False)
+    createLimb(limbs, agentInitX, i*1.75+agentInitY, agentInitZ, rect, (i+1)%2, 0, (i%2), world, False)
 
 for i in range(0, numLimbs-1):
     joint = OdeUniversalJoint(world)
     joint.attach(limbs[i][1], limbs[i+1][1])
-    joint.setAnchor(limbs[i][0].getX()+1, limbs[i][0].getY(), limbs[i][0].getZ())
+    joint.setAnchor(limbs[i][0].getX(), limbs[i][0].getY()+1, limbs[i][0].getZ())
     joint.setParamLoStop(0, -1)
     joint.setParamLoStop(1, -1)
     joint.setParamHiStop(0, 1)
@@ -189,36 +190,65 @@ TrackballRot = OnscreenText(text = str(base.trackball.node().getHpr()), pos = (-
 # getPos is in the form: x, y, z. You can do limbs[1][1].getPosition().getZ() to get z for example
 Pos = OnscreenText(text = str(limbs[1][1].getPosition()), pos = (-0.8, 0.7), scale = 0.06)
 
+cwd = os.getcwd()
+inputSignal = cwd + "/initialSignals.txt"
+
+yvals = cwd + "/yvals.txt"
+
+signals = []
+f_in = open(inputSignal, "r")
+f_out = open(yvals,'w')
+for line in f_in:
+    line = line.strip()
+    signals.append(line.split(","))
+
+signalCount = [0]
+iterationCount = [0]
+
+lastPhysicsUpdateTime = [0]
+timeBetweenPhysicsUpdates = [0.1]
+
 count = 0
 moveCount = 0
 # The task for our simulation
 def simulationTask(count, moveCount, agent1, task):
+    diffTime = globalClock.getDt()
+    frameTime = globalClock.getFrameTime()
+
     # Setup the contact joints
     space.autoCollide() 
     # Step the simulation and set the new positions
-    world.quickStep(globalClock.getDt())
+    world.quickStep(diffTime)
     for np, body in limbs:
         np.setPosQuat(render, body.getPosition(), Quat(body.getQuaternion()))
         
     for np, body in stairs:
         np.setPosQuat(render, body.getPosition(), Quat(body.getQuaternion()))
     
+
+    if frameTime - lastPhysicsUpdateTime[0] > timeBetweenPhysicsUpdates[0]:
+        print str(frameTime)
+        if signalCount[0] < len(signals[0])/2:
+            for i in range(len(joints)):
+                joints[i].add_torques(float(signals[2*i + len(joints)*2*iterationCount[0]][signalCount[0]]), float(signals[2*i+1 + len(joints)*2*iterationCount[0]][signalCount[0]]))
+            lastPhysicsUpdateTime[0] = frameTime
+            signalCount[0] += 1
+        else:
+            f_out.write(str(limbs[0][1].getPosition().getY()) + "\n")
+            if iterationCount[0] >= 250:
+                f_out.close()
+                return task.done
+            limbCount = 0
+            for np, body in limbs:
+                #body.setPosition(agentInitX, limbCount*1.75-15, agentInitZ)
+                np.setPos(agentInitX, limbCount*1.75+agentInitY, agentInitZ)
+                np.setHpr(90, 0, 0)
+                body.setPosition(np.getPos(render))
+                body.setQuaternion(np.getQuat(render))
+                limbCount = limbCount + 1
+            signalCount[0] = 0
+            iterationCount[0] += 1
     
-    if (count[0] % 50 == 0):    
-        print "---------------------"
-        print "iteration" + str(count[0]/50)
-        print "---------------------"
-    
-    ''' 
-    if (moveCount[0] == 200):
-        joints[0].add_torques(torques[agent1[0][moveCount[0]%4]][0], torques[agent1[0][moveCount[0]%4]][1])
-        joints[1].add_torques(torques[agent1[1][moveCount[0]%4]][0], torques[agent1[1][moveCount[0]%4]][1])
-        joints[2].add_torques(torques[agent1[2][moveCount[0]%4]][0], torques[agent1[2][moveCount[0]%4]][1])
-        joints[3].add_torques(torques[agent1[3][moveCount[0]%4]][0], torques[agent1[3][moveCount[0]%4]][1])
-        moveCount[0] = 0
-    '''
-    for joint in joints:
-        joint.add_torques(random.randint(-2000, 2000), random.randint(-2000, 2000))
     # Update text  
     TrackballLoc.setText(str(base.trackball.node().getPos()))
     TrackballRot.setText(str(base.trackball.node().getHpr()))

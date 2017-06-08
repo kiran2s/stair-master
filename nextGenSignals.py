@@ -5,8 +5,8 @@ import os
 posOrNeg = [-1, 1]
 
 # upper and lower bounds for torque values
-upperBound = 2000 
-lowerBound = -2000
+upperBound = 6000
+lowerBound = -6000
 
 numSignals = 1000
 changeRange = 25
