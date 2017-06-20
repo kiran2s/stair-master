@@ -199,7 +199,7 @@ class StairMaster(ShowBase):
         base.trackball.node().setHpr(-50, 20, 20)
 
         # Setup onscreen location text
-        self.agentPos = OnscreenText(text = str(self.agent.limbs[0][1].getPosition()), pos = (-0.8, 0.9), scale = 0.06)
+        self.agentPos = OnscreenText(text = str(self.agent.limbs[Agent.NUM_LIMBS-1][1].getPosition()), pos = (-0.8, 0.9), scale = 0.06)
 
         # Read signals from file
         cwd = os.getcwd()
@@ -264,7 +264,7 @@ class StairMaster(ShowBase):
                     return Task.done
 
         # Update onscreen text
-        self.agentPos.setText(str(self.agent.limbs[0][1].getPosition()))
+        self.agentPos.setText(str(self.agent.limbs[Agent.NUM_LIMBS-1][1].getPosition()))
 
         self.contactGroup.empty()
         self.simLoopCount += 1
