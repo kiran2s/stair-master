@@ -2,6 +2,7 @@ import math
 import random
 from random import randint, random
 import os
+import sys
 
 from direct.gui.OnscreenText import OnscreenText
 
@@ -25,7 +26,7 @@ class Agent:
         self.twistAngle = twistAngle
         self.wriggleAngle = wriggleAngle
 
-        self.density = 80
+        self.density = 75
         self.lx = 2
         self.ly = 1
         self.lz = 1
@@ -157,7 +158,7 @@ class InputEventListener(DirectObject.DirectObject):
         self.render = render
         self.agent = agent
 
-        self.force = 10000
+        self.force = 20000
         self.useNegativeForce = False
 
         self.accept("n", self.neg)
@@ -217,7 +218,7 @@ class InputEventListener(DirectObject.DirectObject):
 
         
 class StairMaster(ShowBase):
-    def __init__(self):
+    def __init__(self, signalFilename, twistAngle, wriggleAngle):
         ShowBase.__init__(self)
 
         '''
@@ -233,7 +234,7 @@ class StairMaster(ShowBase):
         # Setup collidable surface table
         self.world.initSurfaceTable(2)
         #                                fric, bounc, b_vel, soft, soft,    slip, damp
-        self.world.setSurfaceEntry(0, 0, 150,  0.4,   5.0,   0.9,  0.00001, 0.0,  0.002)
+        self.world.setSurfaceEntry(0, 0, 150,  0.4,   3.0,   0.9,  0.00001, 0.0,  0.002)
 
         # Create a space and add a contact group to it to add the contact joints
         self.space = OdeSimpleSpace()
@@ -269,8 +270,8 @@ class StairMaster(ShowBase):
         self.render.setLight(directionalLightNP)
 
         # Create agent
-        self.agentTwistAngle = 1.2
-        self.agentWriggleAngle = 0.8
+        self.agentTwistAngle = twistAngle # 1.2
+        self.agentWriggleAngle = wriggleAngle # 0.8
         self.agent = Agent(self.render, self.world, self.space, self.rect, self.agentTwistAngle, self.agentWriggleAngle)
 
         # Create stairs
@@ -295,8 +296,8 @@ class StairMaster(ShowBase):
 
         # Read signals from file
         cwd = os.getcwd()
-        inputSignalsPathname = cwd + "/initialSignals.txt"
-        self.yvalsPathname = cwd + "/yvals.txt"
+        inputSignalsPathname = cwd + "/" + signalFilename
+        self.yvalsPathname = cwd + "/yvals" + "-" + str(twistAngle) + "-" + str(wriggleAngle) + "-" + signalFilename
 
         # Parse signals
         self.signals = []
@@ -365,6 +366,8 @@ class StairMaster(ShowBase):
                 print str(self.simulationCount) + ": " + fitnessResult
                 self.simulationCount += 1
                 if self.simulationCount >= self.numSignals/(Agent.NUM_JOINTS * 2):
+                    print "DONE"
+                    self.userExit()
                     return Task.done
         #'''
 
@@ -376,6 +379,15 @@ class StairMaster(ShowBase):
 
         return Task.cont
 
+def main(signalsFilename, twistAngle, wriggleAngle):
+    print "Args: " + signalsFilename + " " + str(twistAngle) + " " + str(wriggleAngle)
+    app = StairMaster(signalsFilename, twistAngle, wriggleAngle)
+    app.run()
 
-app = StairMaster()
-app.run()
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        #print "No args"
+        main("initialSignals.txt", 1.2, 0.8)
+    if len(sys.argv) == 4:
+        #print "Args: " + sys.argv[1] + " " + sys.argv[2] + " " + sys.argv[3]
+        main(sys.argv[1], float(sys.argv[2]), float(sys.argv[3]))
