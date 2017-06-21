@@ -22,7 +22,7 @@ class Agent:
     def __init__(self, render, world, space, model):
         self.limbs = []
         self.joints = []
-        self.density = 50
+        self.density = 70
         self.lx = 2
         self.ly = 1
         self.lz = 1
@@ -62,10 +62,11 @@ class Agent:
         joint = OdeUniversalJoint(world)
         joint.attach(limb1[1], limb2[1])
         joint.setAnchor(limb1[0].getX(), limb1[0].getY() + 1, limb1[0].getZ())
-        joint.setParamLoStop(0, -1)
-        joint.setParamLoStop(1, -1)
-        joint.setParamHiStop(0, 1)
-        joint.setParamHiStop(1, 1)
+        # setParamStop(axis, radians), axis=0 for twist, axis=1 for wriggle
+        joint.setParamLoStop(0, -0.6)
+        joint.setParamLoStop(1, -0.7)
+        joint.setParamHiStop(0, 0.6)
+        joint.setParamHiStop(1, 0.7)
         return joint
 
     def reset(self, render):
@@ -76,6 +77,15 @@ class Agent:
             body.setPosition(np.getPos(render))
             body.setQuaternion(np.getQuat(render))
             limbCount += 1
+
+    def delete(self):
+        for np, body in self.limbs:
+            np.removeNode()
+            body.destroy()
+        for joint in self.joints:
+            joint.destroy()
+        self.limbs = None
+        self.joints = None
 
 class Stairs:
     NUM_STEPS = 10
@@ -225,10 +235,10 @@ class StairMaster(ShowBase):
         '''
 
         # Load the rectangle model
-        rect = loader.loadModel("rectangle")
-        rect.setPos(-1, -.5, -.5)
-        rect.flattenLight()
-        rect.setTextureOff(1)
+        self.rect = loader.loadModel("rectangle")
+        self.rect.setPos(-1, -.5, -.5)
+        self.rect.flattenLight()
+        self.rect.setTextureOff(1)
 
         # Create ambient light
         ambientLight = AmbientLight('ambientLight')
@@ -244,7 +254,7 @@ class StairMaster(ShowBase):
         self.render.setLight(directionalLightNP)
 
         # Create agent
-        self.agent = Agent(self.render, self.world, self.space, rect)
+        self.agent = Agent(self.render, self.world, self.space, self.rect)
 
         # Create stairs
         self.stairs = Stairs(self.render, self.world, self.space)
@@ -264,7 +274,7 @@ class StairMaster(ShowBase):
         base.trackball.node().setHpr(-50, 20, 20)
 
         # Setup onscreen location text
-        self.agentPos = OnscreenText(text = str(self.agent.limbs[Agent.NUM_LIMBS-1][1].getPosition()), pos = (-0.8, 0.9), scale = 0.06)
+        self.agentPos = OnscreenText(text = str(self.agent.limbs[2][1].getPosition()), pos = (-0.8, 0.9), scale = 0.06)
 
         # Read signals from file
         cwd = os.getcwd()
@@ -285,13 +295,13 @@ class StairMaster(ShowBase):
         self.simLoopCount = 0
 
         self.lastSimulationTime = 0
-        self.timeBetweenSimulationUpdates = 0.07
+        self.timeBetweenSimulationUpdates = 0.1
 
         # Setup keyboard inputs
         InputEventListener(self.render, self.agent)
 
         # Schedule simulation and render loop
-        self.taskMgr.doMethodLater(1.0, self.simulate, "Simulation and Rendering", extraArgs = [], appendTask = True)
+        self.taskMgr.doMethodLater(2.0, self.simulate, "Simulation and Rendering", extraArgs = [], appendTask = True)
 
     def simulate(self, task):
         diffTime = globalClock.getDt()
@@ -308,33 +318,37 @@ class StairMaster(ShowBase):
             np.setPosQuat(self.render, body.getPosition(), Quat(body.getQuaternion()))
 
         # Check if we should apply forces now
-        '''
+        #'''
         if currTime - self.lastSimulationTime > self.timeBetweenSimulationUpdates:
             print currTime
             if self.forceCount < self.numForcesPerSignal:
                 # Apply forces to all joints of agent
                 for i in range(Agent.NUM_JOINTS):
                     signalIndex = Agent.NUM_JOINTS * 2 * self.simulationCount + 2 * i
-                    self.agent.joints[i].addTorques(float(self.signals[signalIndex][self.forceCount]), float(self.signals[signalIndex + 1][self.forceCount]))
+                    self.agent.joints[i].addTorques(float(self.signals[signalIndex][self.forceCount])/2, float(self.signals[signalIndex + 1][self.forceCount]))
                 self.lastSimulationTime = currTime
                 self.forceCount += 1
             # Current simulation is finished
             else:
                 # Write fitness result to yvals file
                 f_out = open(self.yvalsPathname, 'a')
-                f_out.write(str(self.agent.limbs[Agent.NUM_LIMBS-1][1].getPosition().getY()) + "\n")
+                f_out.write(str(self.agent.limbs[2][1].getPosition().getY()) + "\n")
                 f_out.close()
 
                 # Reset agent
-                self.agent.reset(self.render)
+                self.agent.delete()
+                self.agent = None
+                self.agent = Agent(self.render, self.world, self.space, self.rect)
+                
+                self.lastSimulationTime = currTime + 1.0 # Give some time before next force is applied
                 self.forceCount = 0
                 self.simulationCount += 1
                 if self.simulationCount >= self.numSignals/(Agent.NUM_JOINTS * 2):
                     return Task.done
-        '''
+        #'''
 
         # Update onscreen text
-        self.agentPos.setText(str(self.agent.limbs[Agent.NUM_LIMBS-1][1].getPosition()))
+        self.agentPos.setText(str(self.agent.limbs[2][1].getPosition()))
 
         self.contactGroup.empty()
         self.simLoopCount += 1

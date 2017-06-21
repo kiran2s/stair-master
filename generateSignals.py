@@ -10,7 +10,7 @@ lowerBound = -6000
 
 # fps and simulation duration
 fps = 10
-simDuration = 20
+simDuration = 12
 signalLength = fps * simDuration
 
 # how many and how much can it change
