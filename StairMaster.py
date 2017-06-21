@@ -6,6 +6,7 @@ import os
 from direct.gui.OnscreenText import OnscreenText
 
 from direct.showbase.ShowBase import ShowBase
+from direct.showbase import DirectObject
 from direct.task import Task
 from panda3d.ode import *
 from panda3d.core import BitMask32, CardMaker, Vec3, Vec4, Quat, AmbientLight, DirectionalLight
@@ -132,6 +133,70 @@ class Stairs:
         joint.setParamHiStop(0, 0)
         joint.setParamHiStop(1, 0)
         return joint
+
+class InputEventListener(DirectObject.DirectObject):
+    def __init__(self, render, agent):
+        self.render = render
+        self.agent = agent
+
+        self.force = 10000
+        self.useNegativeForce = False
+
+        self.accept("n", self.neg)
+        self.accept("r", self.reset)
+        self.accept("1", self.applyForce1)
+        self.accept("2", self.applyForce2)
+        self.accept("3", self.applyForce3)
+        self.accept("4", self.applyForce4)
+        self.accept("5", self.applyForce5)
+        self.accept("6", self.applyForce6)
+        self.accept("7", self.applyForce7)
+        self.accept("8", self.applyForce8)
+
+    def getSign(self):
+        if (self.useNegativeForce): return -1
+        else: return 1
+
+    def neg(self):
+        self.useNegativeForce = not self.useNegativeForce
+        print self.useNegativeForce
+
+    def reset(self):
+        self.agent.reset(self.render)
+        print "reset"
+
+    def applyForce1(self):
+        self.agent.joints[0].addTorques(self.getSign() * self.force, 0)
+        print "applyForce1"
+
+    def applyForce2(self):
+        self.agent.joints[0].addTorques(0, self.getSign() * self.force)
+        print "applyForce2"
+
+    def applyForce3(self):
+        self.agent.joints[1].addTorques(self.getSign() * self.force, 0)
+        print "applyForce3"
+
+    def applyForce4(self):
+        self.agent.joints[1].addTorques(0, self.getSign() * self.force)
+        print "applyForce4"
+
+    def applyForce5(self):
+        self.agent.joints[2].addTorques(self.getSign() * self.force, 0)
+        print "applyForce5"
+
+    def applyForce6(self):
+        self.agent.joints[2].addTorques(0, self.getSign() * self.force)
+        print "applyForce6"
+
+    def applyForce7(self):
+        self.agent.joints[3].addTorques(self.getSign() * self.force, 0)
+        print "applyForce7"
+
+    def applyForce8(self):
+        self.agent.joints[3].addTorques(0, self.getSign() * self.force)
+        print "applyForce8"
+
         
 class StairMaster(ShowBase):
     def __init__(self):
@@ -222,6 +287,9 @@ class StairMaster(ShowBase):
         self.lastSimulationTime = 0
         self.timeBetweenSimulationUpdates = 0.07
 
+        # Setup keyboard inputs
+        InputEventListener(self.render, self.agent)
+
         # Schedule simulation and render loop
         self.taskMgr.doMethodLater(1.0, self.simulate, "Simulation and Rendering", extraArgs = [], appendTask = True)
 
@@ -240,6 +308,7 @@ class StairMaster(ShowBase):
             np.setPosQuat(self.render, body.getPosition(), Quat(body.getQuaternion()))
 
         # Check if we should apply forces now
+        '''
         if currTime - self.lastSimulationTime > self.timeBetweenSimulationUpdates:
             print currTime
             if self.forceCount < self.numForcesPerSignal:
@@ -262,6 +331,7 @@ class StairMaster(ShowBase):
                 self.simulationCount += 1
                 if self.simulationCount >= self.numSignals/(Agent.NUM_JOINTS * 2):
                     return Task.done
+        '''
 
         # Update onscreen text
         self.agentPos.setText(str(self.agent.limbs[Agent.NUM_LIMBS-1][1].getPosition()))
