@@ -9,7 +9,7 @@ from direct.showbase.ShowBase import ShowBase
 from direct.showbase import DirectObject
 from direct.task import Task
 from panda3d.ode import *
-from panda3d.core import BitMask32, CardMaker, Vec3, Vec4, Quat, AmbientLight, DirectionalLight
+from panda3d.core import BitMask32, CardMaker, Vec3, Vec4, Quat, AmbientLight, DirectionalLight, ClockObject
 
 class Agent:
     NUM_LIMBS = 5
@@ -19,10 +19,13 @@ class Agent:
     INIT_Z = 0.5
     INIT_ORIENTATION = [90, 0, 0]
 
-    def __init__(self, render, world, space, model):
+    def __init__(self, render, world, space, model, twistAngle, wriggleAngle):
         self.limbs = []
         self.joints = []
-        self.density = 70
+        self.twistAngle = twistAngle
+        self.wriggleAngle = wriggleAngle
+
+        self.density = 80
         self.lx = 2
         self.ly = 1
         self.lz = 1
@@ -62,11 +65,16 @@ class Agent:
         joint = OdeUniversalJoint(world)
         joint.attach(limb1[1], limb2[1])
         joint.setAnchor(limb1[0].getX(), limb1[0].getY() + 1, limb1[0].getZ())
+
         # setParamStop(axis, radians), axis=0 for twist, axis=1 for wriggle
-        joint.setParamLoStop(0, -0.6)
-        joint.setParamLoStop(1, -0.7)
-        joint.setParamHiStop(0, 0.6)
-        joint.setParamHiStop(1, 0.7)
+        #twistAngle = 1.2
+        #wriggleAngle = 0.8
+
+        joint.setParamLoStop(0, -self.twistAngle)
+        joint.setParamHiStop(0, self.twistAngle)
+        joint.setParamLoStop(1, -self.wriggleAngle)
+        joint.setParamHiStop(1, self.wriggleAngle)
+
         return joint
 
     def reset(self, render):
@@ -212,13 +220,20 @@ class StairMaster(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
 
+        '''
+        # Set frame rate
+        globalClock.setMode(ClockObject.MLimited)
+        globalClock.setFrameRate(30)
+        '''
+
         # Setup our physics world
         self.world = OdeWorld()
         self.world.setGravity(0, 0, -9.81)
 
         # Setup collidable surface table
         self.world.initSurfaceTable(2)
-        self.world.setSurfaceEntry(0, 0, 150, 0.2, 9.1, 0.9, 0.00001, 0.0, 0.002)
+        #                                fric, bounc, b_vel, soft, soft,    slip, damp
+        self.world.setSurfaceEntry(0, 0, 150,  0.4,   5.0,   0.9,  0.00001, 0.0,  0.002)
 
         # Create a space and add a contact group to it to add the contact joints
         self.space = OdeSimpleSpace()
@@ -254,7 +269,9 @@ class StairMaster(ShowBase):
         self.render.setLight(directionalLightNP)
 
         # Create agent
-        self.agent = Agent(self.render, self.world, self.space, self.rect)
+        self.agentTwistAngle = 1.2
+        self.agentWriggleAngle = 0.8
+        self.agent = Agent(self.render, self.world, self.space, self.rect, self.agentTwistAngle, self.agentWriggleAngle)
 
         # Create stairs
         self.stairs = Stairs(self.render, self.world, self.space)
@@ -298,7 +315,7 @@ class StairMaster(ShowBase):
         self.timeBetweenSimulationUpdates = 0.1
 
         # Setup keyboard inputs
-        InputEventListener(self.render, self.agent)
+        self.inputEventListener = InputEventListener(self.render, self.agent)
 
         # Schedule simulation and render loop
         self.taskMgr.doMethodLater(2.0, self.simulate, "Simulation and Rendering", extraArgs = [], appendTask = True)
@@ -306,6 +323,8 @@ class StairMaster(ShowBase):
     def simulate(self, task):
         diffTime = globalClock.getDt()
         currTime = globalClock.getFrameTime()
+
+        #print str(currTime) + " " + str(diffTime)
 
         # Setup the contact joints
         self.space.autoCollide()
@@ -320,28 +339,30 @@ class StairMaster(ShowBase):
         # Check if we should apply forces now
         #'''
         if currTime - self.lastSimulationTime > self.timeBetweenSimulationUpdates:
-            print currTime
             if self.forceCount < self.numForcesPerSignal:
                 # Apply forces to all joints of agent
                 for i in range(Agent.NUM_JOINTS):
                     signalIndex = Agent.NUM_JOINTS * 2 * self.simulationCount + 2 * i
-                    self.agent.joints[i].addTorques(float(self.signals[signalIndex][self.forceCount])/2, float(self.signals[signalIndex + 1][self.forceCount]))
+                    self.agent.joints[i].addTorques(50 * float(self.signals[signalIndex][self.forceCount])/2, 70 * float(self.signals[signalIndex + 1][self.forceCount]))
                 self.lastSimulationTime = currTime
                 self.forceCount += 1
             # Current simulation is finished
             else:
                 # Write fitness result to yvals file
                 f_out = open(self.yvalsPathname, 'a')
-                f_out.write(str(self.agent.limbs[2][1].getPosition().getY()) + "\n")
+                fitnessResult = str(self.agent.limbs[2][1].getPosition().getY())
+                f_out.write(fitnessResult + "\n")
                 f_out.close()
 
                 # Reset agent
                 self.agent.delete()
                 self.agent = None
-                self.agent = Agent(self.render, self.world, self.space, self.rect)
+                self.agent = Agent(self.render, self.world, self.space, self.rect, self.agentTwistAngle, self.agentWriggleAngle)
+                self.inputEventListener.agent = self.agent
                 
                 self.lastSimulationTime = currTime + 1.0 # Give some time before next force is applied
                 self.forceCount = 0
+                print str(self.simulationCount) + ": " + fitnessResult
                 self.simulationCount += 1
                 if self.simulationCount >= self.numSignals/(Agent.NUM_JOINTS * 2):
                     return Task.done
