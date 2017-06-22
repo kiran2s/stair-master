@@ -1,0 +1,11 @@
+.text {
+    text-align:center;
+}
+
+.center { 
+    margin: 0 auto; width: 400px; 
+}
+
+p.abstract {
+	margin: 0 auto; width: 500px; 
+}
