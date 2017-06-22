@@ -20,11 +20,11 @@ class Agent:
     INIT_Z = 0.5
     INIT_ORIENTATION = [90, 0, 0]
 
-    def __init__(self, render, world, space, model, twistAngle, wriggleAngle):
+    def __init__(self, render, world, space, model, rotateAngle, bendAngle):
         self.limbs = []
         self.joints = []
-        self.twistAngle = twistAngle
-        self.wriggleAngle = wriggleAngle
+        self.rotateAngle = rotateAngle
+        self.bendAngle = bendAngle
 
         self.density = 75
         self.lx = 2
@@ -68,13 +68,13 @@ class Agent:
         joint.setAnchor(limb1[0].getX(), limb1[0].getY() + 1, limb1[0].getZ())
 
         # setParamStop(axis, radians), axis=0 for twist, axis=1 for wriggle
-        #twistAngle = 1.2
-        #wriggleAngle = 0.8
+        #rotateAngle = 1.2
+        #bendAngle = 0.8
 
-        joint.setParamLoStop(0, -self.twistAngle)
-        joint.setParamHiStop(0, self.twistAngle)
-        joint.setParamLoStop(1, -self.wriggleAngle)
-        joint.setParamHiStop(1, self.wriggleAngle)
+        joint.setParamLoStop(0, -self.rotateAngle)
+        joint.setParamHiStop(0, self.rotateAngle)
+        joint.setParamLoStop(1, -self.bendAngle)
+        joint.setParamHiStop(1, self.bendAngle)
 
         return joint
 
@@ -218,7 +218,7 @@ class InputEventListener(DirectObject.DirectObject):
 
         
 class StairMaster(ShowBase):
-    def __init__(self, signalFilename, twistAngle, wriggleAngle):
+    def __init__(self, signalFilename, rotateAngle, bendAngle):
         ShowBase.__init__(self)
 
         '''
@@ -270,9 +270,9 @@ class StairMaster(ShowBase):
         self.render.setLight(directionalLightNP)
 
         # Create agent
-        self.agentTwistAngle = twistAngle # 1.2
-        self.agentWriggleAngle = wriggleAngle # 0.8
-        self.agent = Agent(self.render, self.world, self.space, self.rect, self.agentTwistAngle, self.agentWriggleAngle)
+        self.agentRotateAngle = rotateAngle # 1.2
+        self.agentBendAngle = bendAngle # 0.8
+        self.agent = Agent(self.render, self.world, self.space, self.rect, self.agentRotateAngle, self.agentBendAngle)
 
         # Create stairs
         self.stairs = Stairs(self.render, self.world, self.space)
@@ -297,7 +297,7 @@ class StairMaster(ShowBase):
         # Read signals from file
         cwd = os.getcwd()
         inputSignalsPathname = cwd + "/" + signalFilename
-        self.yvalsPathname = cwd + "/yvals" + "-" + str(twistAngle) + "-" + str(wriggleAngle) + "-" + signalFilename
+        self.yvalsPathname = cwd + "/yvals" + "-" + str(rotateAngle) + "-" + str(bendAngle) + "-" + signalFilename
 
         # Parse signals
         self.signals = []
@@ -344,7 +344,7 @@ class StairMaster(ShowBase):
                 # Apply forces to all joints of agent
                 for i in range(Agent.NUM_JOINTS):
                     signalIndex = Agent.NUM_JOINTS * 2 * self.simulationCount + 2 * i
-                    self.agent.joints[i].addTorques(50 * float(self.signals[signalIndex][self.forceCount])/2, 70 * float(self.signals[signalIndex + 1][self.forceCount]))
+                    self.agent.joints[i].addTorques(0 * 50 * float(self.signals[signalIndex][self.forceCount])/2, 70 * float(self.signals[signalIndex + 1][self.forceCount]))
                 self.lastSimulationTime = currTime
                 self.forceCount += 1
             # Current simulation is finished
@@ -358,7 +358,7 @@ class StairMaster(ShowBase):
                 # Reset agent
                 self.agent.delete()
                 self.agent = None
-                self.agent = Agent(self.render, self.world, self.space, self.rect, self.agentTwistAngle, self.agentWriggleAngle)
+                self.agent = Agent(self.render, self.world, self.space, self.rect, self.agentRotateAngle, self.agentBendAngle)
                 self.inputEventListener.agent = self.agent
                 
                 self.lastSimulationTime = currTime + 1.0 # Give some time before next force is applied
@@ -379,9 +379,9 @@ class StairMaster(ShowBase):
 
         return Task.cont
 
-def main(signalsFilename, twistAngle, wriggleAngle):
-    print "Args: " + signalsFilename + " " + str(twistAngle) + " " + str(wriggleAngle)
-    app = StairMaster(signalsFilename, twistAngle, wriggleAngle)
+def main(signalsFilename, rotateAngle, bendAngle):
+    print "Args: " + signalsFilename + " " + str(rotateAngle) + " " + str(bendAngle)
+    app = StairMaster(signalsFilename, rotateAngle, bendAngle)
     app.run()
 
 if __name__ == "__main__":
