@@ -62,10 +62,17 @@ for line in f_in:
 f_in.close()
 
 # Extract the best signals
+numSignalSetsToExtract = 4
+if (len(sys.argv) == 4):
+	numSignalSetsToExtract = int(sys.argv[3])
+
+currSignalSet = 0
 bestSignals = []
 for i in bestIndices:
-	signalBaseIndex = i*8
-	bestSignals.append(signals[signalBaseIndex:signalBaseIndex+8])
+	if currSignalSet < numSignalSetsToExtract:
+		signalBaseIndex = i*8
+		bestSignals.append(signals[signalBaseIndex:signalBaseIndex+8])
+		currSignalSet += 1
 
 # Mutate best signals and write them to files
 currentSignal = ""
