@@ -387,7 +387,9 @@ def main(signalsFilename, rotateAngle, bendAngle):
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         #print "No args"
-        main("initialSignals.txt", 1.2, 0.8)
-    if len(sys.argv) == 4:
+        main("initialSignals.txt", 0.0, 1.8)
+    elif len(sys.argv) == 4:
         #print "Args: " + sys.argv[1] + " " + sys.argv[2] + " " + sys.argv[3]
         main(sys.argv[1], float(sys.argv[2]), float(sys.argv[3]))
+    else:
+        print "Usage: StairMaster <signals-file> <agent-rotate-angle> <agent-bend-angle>"
