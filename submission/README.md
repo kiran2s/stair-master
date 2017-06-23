@@ -4,7 +4,7 @@ To run StairMaster.py:
 	or for Windows:
 	1.2) https://www.panda3d.org/download.php
 
-2) Move .egg files (s0-9.egg and rectangle.egg) into:
+2) Move .egg files (s0-9.egg and rectangle.egg) in src folder into:
 	For Mac/Linux:
 		/usr/local/lib/python2.7/site-packages/panda3d/models/
 	For Windows:
