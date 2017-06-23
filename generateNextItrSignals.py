@@ -18,7 +18,7 @@ signalLength = fps * simDuration
 
 # how many and how much can it change
 numSimulations = 60
-mutationRange = 50
+mutationRange = 30
 
 yvalsFilename = sys.argv[1]
 

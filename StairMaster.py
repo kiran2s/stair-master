@@ -234,7 +234,7 @@ class StairMaster(ShowBase):
         # Setup collidable surface table
         self.world.initSurfaceTable(2)
         #                                fric, bounc, b_vel, soft 0.9, soft 0.00001,    slip, damp 0.002
-        self.world.setSurfaceEntry(0, 0, 150,  0.4,   3.0,   0.8,  0.0003, 0.0, 0.002)
+        self.world.setSurfaceEntry(0, 0, 150,  0.4,   3.0,   0.8,  0.00001, 0.0, 0.002)
 
         # Create a space and add a contact group to it to add the contact joints
         self.space = OdeSimpleSpace()
