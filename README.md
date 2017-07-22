@@ -1,4 +1,18 @@
-To run StairMaster.py:
+# Stair Master: Artificial Creature Evolution in Stair Climbing
+
+### Abstract
+
+There have previously been works in creating artificial models that evolve using 
+information from the environment in order to become more fit. 
+In this paper, we present one such experiment in which a snake-like model learns to 
+climb stairs over multiple generations using the information of how successful models 
+in the previous generation were. The paper details the specifications of our simulation, 
+the implementation using a Python library called Panda3D, and an analysis 
+of the model's evolution.
+
+[Full Report](./submission/report/evolution-artificial-creatures.pdf)
+
+### To run StairMaster.py:
 1) Install panda3d via:
 	1.1) pip install panda3d
 	or for Windows:
